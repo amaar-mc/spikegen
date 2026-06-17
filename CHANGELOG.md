@@ -9,6 +9,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Planned
 - An optional NumPy fast path.
 
+## [0.3.0]
+
+### Added
+- `bernoulli(*, rate, duration, dt, seed)`: discrete-time Bernoulli spiking process. Time is
+  tiled into bins of width dt; each bin fires a spike at its start time with probability
+  `rate * dt`. Raises `ValueError` when `rate * dt > 1`. Seeded and reproducible.
+- `jitter(times, *, sigma, seed)`: add independent Gaussian jitter (mean 0, standard
+  deviation sigma) to each spike time and return the sorted result. Useful for constructing
+  surrogate or null datasets. `sigma = 0` returns the sorted input unchanged.
+
 ## [0.2.0]
 
 ### Added

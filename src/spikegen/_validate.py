@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from math import isfinite
 
 
@@ -30,3 +31,9 @@ def check_count(name: str, value: int) -> None:
     # bool is a subclass of int, so reject it explicitly: a count of True makes no sense.
     if not isinstance(value, int) or isinstance(value, bool) or value < 1:
         raise ValueError(f"{name} must be a positive integer, received {value!r}")
+
+
+def check_times_finite(times: Sequence[float]) -> None:
+    for t in times:
+        if not isfinite(t):
+            raise ValueError(f"times must contain only finite values, received {t!r}")

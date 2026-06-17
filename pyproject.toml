@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "spikegen"
-version = "0.2.0"
-description = "Generate spike trains (Poisson, gamma renewal, regular, inhomogeneous) in pure Python with zero dependencies."
+version = "0.3.0"
+description = "Generate spike trains (Poisson, gamma renewal, regular, Bernoulli, inhomogeneous) in pure Python with zero dependencies."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }

@@ -41,6 +41,24 @@ and makes the whole population a function of `(seed, units)` only, regardless of
 randomness `make` consumes. A deterministic generator that ignores its seed yields identical
 units, which is the expected behavior.
 
+## Bernoulli
+
+`bernoulli` tiles `[0, duration)` into `int(duration / dt)` bins of width dt. Each bin's
+start time is emitted as a spike with probability `p = rate * dt`, sampled from a Bernoulli
+draw using `rng.random() < p`. The constraint `p <= 1` ensures a valid probability; the
+function raises `ValueError` with an explicit message when `rate * dt > 1`. Using integer
+bin indices (`i * dt`) avoids accumulated floating-point drift across a long train.
+
+## Jitter
+
+`jitter` adds an independent Gaussian deviate (mean 0, standard deviation sigma) to each
+input spike time using `rng.gauss(0.0, sigma)`, then sorts the result. The output is not
+constrained to `[0, duration)` because the input is an arbitrary spike sequence, not a
+bounded generative process; callers that need boundary enforcement can apply `with_refractory`
+or filter manually. `sigma = 0` skips the RNG and returns `sorted(times)` directly. The
+primary use case is generating surrogate spike trains for null-hypothesis testing by
+destroying precise timing relationships while preserving the overall spike count.
+
 ## Reproducibility
 
 Every stochastic generator takes an integer `seed` and uses `random.Random(seed)`, so the

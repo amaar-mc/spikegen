@@ -8,7 +8,7 @@
 [![CI](https://github.com/amaar-mc/spikegen/actions/workflows/ci.yml/badge.svg)](https://github.com/amaar-mc/spikegen/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
-Generate spike trains in pure Python with zero dependencies. Poisson, gamma renewal, regular, and inhomogeneous processes, returned as plain sorted lists of spike times, with explicit seeds for reproducibility.
+Generate spike trains in pure Python with zero dependencies. Poisson, gamma renewal, regular, Bernoulli, and inhomogeneous processes, returned as plain sorted lists of spike times, with explicit seeds for reproducibility.
 
 ## Install
 
@@ -30,6 +30,15 @@ with_refractory(spikes, refractory=0.002)              # enforce a 2 ms refracto
 
 from spikegen import population
 population(lambda s: homogeneous_poisson(rate=50.0, duration=2.0, seed=s), units=10, seed=0)
+
+from spikegen import bernoulli, jitter
+
+# Discrete-time Bernoulli process: 1 ms bins, 50 Hz rate over 1 second
+bernoulli(rate=50.0, duration=1.0, dt=0.001, seed=0)
+
+# Jitter: add Gaussian noise (sigma=2 ms) to each spike time, useful for surrogate data
+spikes = homogeneous_poisson(rate=40.0, duration=1.0, seed=0)
+jitter(spikes, sigma=0.002, seed=1)
 ```
 
 Times are in the same units as `1 / rate` (seconds if rate is in Hz). Seeded processes are
@@ -51,7 +60,13 @@ distance between them.
 - `inhomogeneous_poisson(rate_fn, max_rate, duration, seed)`: time-varying rate by thinning.
 - `gamma_renewal(rate, shape, duration, seed)`: gamma inter-spike intervals; shape 1 is
   Poisson, larger shape is more regular.
+- `bernoulli(rate, duration, dt, seed)`: discrete-time Bernoulli process. Time is divided
+  into bins of width dt; each bin fires at its start time with probability `rate * dt`.
+  Raises `ValueError` when `rate * dt > 1`.
 - `with_refractory(times, refractory)`: drop spikes within a minimum interval.
+- `jitter(times, sigma, seed)`: add independent Gaussian jitter (standard deviation sigma)
+  to each spike time and return sorted results. Useful for surrogate or null datasets that
+  destroy precise timing while preserving spike count. `sigma = 0` sorts without change.
 - `population(make, units, seed)`: build a population of trains by calling `make(seed)` once
   per unit with independent, reproducible child seeds derived from the base seed.
 

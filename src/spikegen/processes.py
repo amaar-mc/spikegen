@@ -8,6 +8,7 @@ from ._validate import (
     check_positive,
     check_rate,
     check_seed,
+    check_times_finite,
 )
 
 
@@ -100,3 +101,45 @@ def with_refractory(times: Sequence[float], *, refractory: float) -> list[float]
             kept.append(t)
             last = t
     return kept
+
+
+def bernoulli(*, rate: float, duration: float, dt: float, seed: int) -> list[float]:
+    """Discrete-time Bernoulli spiking process on [0, duration).
+
+    Time is divided into bins of width dt. Each bin starting at time t fires a spike
+    with probability p = rate * dt. The spike time is the bin's start (left edge).
+
+    rate * dt must be in [0, 1]; raising ValueError if rate * dt > 1 since the
+    per-bin probability would be invalid."""
+    check_rate(rate)
+    check_duration(duration)
+    check_positive("dt", dt)
+    check_seed(seed)
+    p = rate * dt
+    if p > 1.0:
+        raise ValueError(
+            f"rate * dt = {p!r} exceeds 1.0; reduce rate or dt so each bin probability"
+            f" is valid (rate={rate!r}, dt={dt!r})"
+        )
+    rng = random.Random(seed)
+    times: list[float] = []
+    n_bins = int(duration / dt)
+    for i in range(n_bins):
+        if rng.random() < p:
+            times.append(i * dt)
+    return times
+
+
+def jitter(times: Sequence[float], *, sigma: float, seed: int) -> list[float]:
+    """Add independent Gaussian jitter to each spike time and return the sorted result.
+
+    Each spike time t becomes t + N(0, sigma^2). sigma = 0 returns the input sorted
+    unchanged. Useful for constructing surrogate or null datasets by destroying precise
+    spike timing while preserving the overall count."""
+    check_non_negative("sigma", sigma)
+    check_seed(seed)
+    check_times_finite(times)
+    if sigma == 0.0:
+        return sorted(times)
+    rng = random.Random(seed)
+    return sorted(t + rng.gauss(0.0, sigma) for t in times)
