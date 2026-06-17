@@ -1,0 +1,60 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "spikegen"
+version = "0.1.0"
+description = "Generate spike trains (Poisson, gamma renewal, regular, inhomogeneous) in pure Python with zero dependencies."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Amaar Chughtai" }]
+keywords = [
+  "spike-train",
+  "neuroscience",
+  "computational-neuroscience",
+  "neuromorphic",
+  "poisson-process",
+  "renewal-process",
+  "point-process",
+  "spiking-neural-networks",
+  "simulation",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: Bio-Informatics",
+  "Typing :: Typed",
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.11", "hypothesis>=6"]
+
+[project.urls]
+Homepage = "https://github.com/amaar-mc/spikegen"
+Repository = "https://github.com/amaar-mc/spikegen"
+Issues = "https://github.com/amaar-mc/spikegen/issues"
+Changelog = "https://github.com/amaar-mc/spikegen/blob/main/CHANGELOG.md"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/spikegen"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.mypy]
+strict = true
+files = ["src"]

@@ -1,0 +1,102 @@
+import math
+import random
+from collections.abc import Callable, Sequence
+
+from ._validate import (
+    check_duration,
+    check_non_negative,
+    check_positive,
+    check_rate,
+    check_seed,
+)
+
+
+def regular(*, rate: float, duration: float) -> list[float]:
+    """Evenly spaced spikes at 0, 1/rate, 2/rate, ... within [0, duration). Deterministic.
+    Indices are multiplied by the step rather than accumulated to avoid floating drift."""
+    check_rate(rate)
+    check_duration(duration)
+    step = 1.0 / rate
+    times: list[float] = []
+    i = 0
+    t = 0.0
+    while t < duration:
+        times.append(t)
+        i += 1
+        t = i * step
+    return times
+
+
+def homogeneous_poisson(*, rate: float, duration: float, seed: int) -> list[float]:
+    """Homogeneous Poisson process on [0, duration) with the given rate, drawing
+    exponential inter-spike intervals. Seeded for reproducibility."""
+    check_rate(rate)
+    check_duration(duration)
+    check_seed(seed)
+    rng = random.Random(seed)
+    times: list[float] = []
+    t = 0.0
+    while True:
+        # 1 - U avoids log(0) when U happens to be 0.
+        t += -math.log(1.0 - rng.random()) / rate
+        if t >= duration:
+            break
+        times.append(t)
+    return times
+
+
+def inhomogeneous_poisson(
+    *, rate_fn: Callable[[float], float], max_rate: float, duration: float, seed: int
+) -> list[float]:
+    """Inhomogeneous Poisson process by thinning: propose spikes at max_rate and keep each
+    at time t with probability rate_fn(t) / max_rate. rate_fn must return a value in
+    [0, max_rate] for every t in [0, duration). Seeded for reproducibility."""
+    check_positive("max_rate", max_rate)
+    check_duration(duration)
+    check_seed(seed)
+    rng = random.Random(seed)
+    times: list[float] = []
+    t = 0.0
+    while True:
+        t += -math.log(1.0 - rng.random()) / max_rate
+        if t >= duration:
+            break
+        rate = rate_fn(t)
+        if rate < 0.0 or rate > max_rate:
+            raise ValueError(f"rate_fn returned {rate!r} at t={t!r}, outside [0, max_rate]")
+        if rng.random() < rate / max_rate:
+            times.append(t)
+    return times
+
+
+def gamma_renewal(*, rate: float, shape: float, duration: float, seed: int) -> list[float]:
+    """Gamma renewal process: inter-spike intervals follow a gamma distribution with the
+    given shape and a mean of 1/rate. shape = 1 reduces to a Poisson process; larger shape
+    gives more regular spiking. Seeded for reproducibility."""
+    check_rate(rate)
+    check_positive("shape", shape)
+    check_duration(duration)
+    check_seed(seed)
+    rng = random.Random(seed)
+    scale = 1.0 / (rate * shape)  # mean interval = shape * scale = 1 / rate
+    times: list[float] = []
+    t = 0.0
+    while True:
+        t += rng.gammavariate(shape, scale)
+        if t >= duration:
+            break
+        times.append(t)
+    return times
+
+
+def with_refractory(times: Sequence[float], *, refractory: float) -> list[float]:
+    """Enforce a minimum inter-spike interval by dropping each spike that falls within
+    refractory of the previously kept spike. Inputs are sorted first."""
+    check_non_negative("refractory", refractory)
+    kept: list[float] = []
+    last: float | None = None
+    for t in sorted(times):
+        if last is None or t - last >= refractory:
+            kept.append(t)
+            last = t
+    return kept
