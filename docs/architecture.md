@@ -32,6 +32,15 @@ the exponential intervals of a Poisson process; larger shapes give more regular 
 `with_refractory` sorts the input and keeps a spike only when it is at least `refractory`
 after the previously kept spike, which models an absolute refractory period.
 
+## Population
+
+`population` builds a list of spike trains by calling a user-supplied `make(seed)` once per
+unit. It draws all child seeds up front from a single `random.Random(seed)`, then calls
+`make` with each. Drawing the seeds before any train is generated keeps each unit independent
+and makes the whole population a function of `(seed, units)` only, regardless of how much
+randomness `make` consumes. A deterministic generator that ignores its seed yields identical
+units, which is the expected behavior.
+
 ## Reproducibility
 
 Every stochastic generator takes an integer `seed` and uses `random.Random(seed)`, so the

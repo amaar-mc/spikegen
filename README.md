@@ -27,6 +27,9 @@ gamma_renewal(rate=20.0, shape=2.0, duration=1.0, seed=0)  # more regular than P
 
 spikes = homogeneous_poisson(rate=80.0, duration=1.0, seed=0)
 with_refractory(spikes, refractory=0.002)              # enforce a 2 ms refractory period
+
+from spikegen import population
+population(lambda s: homogeneous_poisson(rate=50.0, duration=2.0, seed=s), units=10, seed=0)
 ```
 
 Times are in the same units as `1 / rate` (seconds if rate is in Hz). Seeded processes are
@@ -49,8 +52,10 @@ distance between them.
 - `gamma_renewal(rate, shape, duration, seed)`: gamma inter-spike intervals; shape 1 is
   Poisson, larger shape is more regular.
 - `with_refractory(times, refractory)`: drop spikes within a minimum interval.
+- `population(make, units, seed)`: build a population of trains by calling `make(seed)` once
+  per unit with independent, reproducible child seeds derived from the base seed.
 
-All parameters are keyword-only and explicit.
+All parameters after the first are keyword-only and explicit.
 
 ## Testing
 

@@ -7,8 +7,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Planned
-- Multi-unit population generation.
 - An optional NumPy fast path.
+
+## [0.2.0]
+
+### Added
+- `population(make, *, units, seed)`: generate a population of spike trains by calling `make`
+  once per unit with an independent, reproducible seed derived from the base seed. The whole
+  population depends only on `(seed, units)`.
 
 ## [0.1.0]
 

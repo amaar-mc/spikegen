@@ -24,3 +24,9 @@ def check_non_negative(name: str, value: float) -> None:
 def check_seed(seed: int) -> None:
     if not isinstance(seed, int):
         raise ValueError(f"seed must be an integer, received {seed!r}")
+
+
+def check_count(name: str, value: int) -> None:
+    # bool is a subclass of int, so reject it explicitly: a count of True makes no sense.
+    if not isinstance(value, int) or isinstance(value, bool) or value < 1:
+        raise ValueError(f"{name} must be a positive integer, received {value!r}")
