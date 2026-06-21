@@ -6,8 +6,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Planned
-- An optional NumPy fast path.
+## [0.4.0] - 2026-06-20
+
+### Added
+- Optional NumPy fast path behind the `[fast]` extra (`pip install spikegen[fast]`):
+  `homogeneous_poisson_numpy(*, rate, duration, seed)`. It draws exponential inter-spike
+  intervals in batches and takes their cumulative sum with NumPy, rather than accumulating
+  one interval at a time in a Python loop, which is much faster for long, high-rate trains.
+  The pure-Python `homogeneous_poisson` remains the zero-dependency default; NumPy is
+  imported lazily only inside the fast path. The fast path uses a NumPy `Generator` (PCG64),
+  a different random stream from the pure path's `random.Random` (Mersenne Twister), so it is
+  not bit-identical to `homogeneous_poisson` for a given seed. It is statistically equivalent:
+  both produce a homogeneous Poisson process with the same rate, and their spike counts, mean
+  rate, and inter-spike-interval distribution agree. The fast path is itself fully
+  reproducible for a fixed seed. Equivalence is enforced by seeded tests with tolerances
+  derived from the Poisson count distribution (mean rT, standard deviation sqrt(rT)).
 
 ## [0.3.0]
 

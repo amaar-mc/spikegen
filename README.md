@@ -44,6 +44,35 @@ jitter(spikes, sigma=0.002, seed=1)
 Times are in the same units as `1 / rate` (seconds if rate is in Hz). Seeded processes are
 reproducible: the same seed gives the same train.
 
+## Optional NumPy fast path
+
+The core package has zero runtime dependencies. For long, high-rate Poisson trains there is
+an optional vectorized generator behind the `[fast]` extra:
+
+```sh
+pip install spikegen[fast]
+```
+
+```python
+from spikegen import homogeneous_poisson_numpy
+
+# Same homogeneous Poisson process as homogeneous_poisson, but vectorized with NumPy.
+homogeneous_poisson_numpy(rate=1000.0, duration=10.0, seed=0)
+```
+
+`homogeneous_poisson_numpy(rate, duration, seed)` draws exponential inter-spike intervals in
+batches and takes their cumulative sum with NumPy instead of looping in Python, which is much
+faster for long, high-rate trains. NumPy is imported lazily only inside this function, so the
+pure-Python `homogeneous_poisson` stays the default and the package still imports with no
+dependencies; calling `homogeneous_poisson_numpy` without `[fast]` installed raises an
+`ImportError`.
+
+The fast path is reproducible for a fixed seed but is not bit-identical to
+`homogeneous_poisson` for the same seed: it uses NumPy's `Generator` (PCG64), a different
+random stream from the pure path's `random.Random` (Mersenne Twister). The two are
+statistically equivalent: both produce a homogeneous Poisson process with the same rate, so
+their spike counts, mean rate, and inter-spike-interval distribution agree.
+
 ## Why this exists
 
 Generating synthetic spike trains is a daily need, but the generators live inside heavy
