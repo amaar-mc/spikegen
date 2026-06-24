@@ -8,7 +8,7 @@
 [![CI](https://github.com/amaar-mc/spikegen/actions/workflows/ci.yml/badge.svg)](https://github.com/amaar-mc/spikegen/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
-Generate spike trains in pure Python with zero dependencies. Poisson, gamma and inverse-Gaussian renewal, regular, Bernoulli, and inhomogeneous processes, returned as plain sorted lists of spike times, with explicit seeds for reproducibility.
+Generate spike trains in pure Python with zero dependencies. Poisson, gamma, inverse-Gaussian and lognormal renewal, regular, Bernoulli, and inhomogeneous processes, returned as plain sorted lists of spike times, with explicit seeds for reproducibility.
 
 ## Install
 
@@ -29,6 +29,11 @@ from spikegen import inverse_gaussian_renewal
 
 # Inverse-Gaussian (Wald) renewal: ISIs ~ IG(mu, lam); the LIF first-passage law.
 inverse_gaussian_renewal(mu=0.05, lam=0.2, duration=1.0, seed=0)
+
+from spikegen import lognormal_renewal
+
+# Lognormal renewal: ISIs are lognormal with mean 20 ms and CV 0.6 (common cortical ISI fit).
+lognormal_renewal(mean=0.02, cv=0.6, duration=1.0, seed=0)
 
 spikes = homogeneous_poisson(rate=80.0, duration=1.0, seed=0)
 with_refractory(spikes, refractory=0.002)              # enforce a 2 ms refractory period
@@ -100,6 +105,15 @@ distance between them.
   gives irregular spiking. This is the first-passage-time distribution of a drift-diffusion
   (perfect integrate-and-fire) neuron, a principled companion to `gamma_renewal`. Intervals
   are sampled with the Michael-Schucany-Haas algorithm (Michael, Schucany, Haas 1976).
+- `lognormal_renewal(mean, cv, duration, seed)`: lognormal inter-spike intervals, the common
+  empirical fit for cortical ISI distributions. Parameterized directly by the ISI `mean` and
+  coefficient of variation `cv`: the underlying normal `N(mu, sigma**2)` follows from
+  `sigma**2 = ln(1 + cv**2)` and `mu = ln(mean) - sigma**2 / 2`, and each interval is
+  `exp(mu + sigma * Z)` with `Z ~ N(0, 1)`. This gives `E[ISI] = mean` and `CV[ISI] = cv`
+  exactly in expectation; the lognormal CV depends only on sigma,
+  `CV = sqrt(exp(sigma**2) - 1)`. Small `cv` gives nearly regular spiking, large `cv` gives
+  bursty, irregular spiking. A natural companion to `gamma_renewal` and
+  `inverse_gaussian_renewal`.
 - `bernoulli(rate, duration, dt, seed)`: discrete-time Bernoulli process. Time is divided
   into bins of width dt; each bin fires at its start time with probability `rate * dt`.
   Raises `ValueError` when `rate * dt > 1`.

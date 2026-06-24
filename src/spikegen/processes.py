@@ -125,6 +125,37 @@ def inverse_gaussian_renewal(*, mu: float, lam: float, duration: float, seed: in
     return times
 
 
+def lognormal_renewal(*, mean: float, cv: float, duration: float, seed: int) -> list[float]:
+    """Lognormal renewal process: inter-spike intervals are i.i.d. lognormal, the common
+    empirical fit for cortical ISI distributions and a natural companion to gamma_renewal and
+    inverse_gaussian_renewal.
+
+    Parameterized by the ISI mean and coefficient of variation directly (the
+    neuroscience-friendly form), not by the underlying normal's parameters. Given a target ISI
+    mean and cv, the underlying normal N(mu, sigma**2) is recovered from
+    sigma**2 = ln(1 + cv**2) and mu = ln(mean) - sigma**2 / 2, and each interval is
+    exp(mu + sigma * Z) with Z ~ N(0, 1) (via random.gauss). This yields E[ISI] = mean and
+    CV[ISI] = cv exactly in expectation. The lognormal CV depends only on sigma:
+    CV = sqrt(exp(sigma**2) - 1), so small cv gives nearly regular spiking and large cv gives
+    bursty, irregular spiking. Seeded for reproducibility."""
+    check_positive("mean", mean)
+    check_positive("cv", cv)
+    check_duration(duration)
+    check_seed(seed)
+    rng = random.Random(seed)
+    sigma2 = math.log(1.0 + cv * cv)
+    sigma = math.sqrt(sigma2)
+    mu = math.log(mean) - sigma2 / 2.0
+    times: list[float] = []
+    t = 0.0
+    while True:
+        t += math.exp(mu + sigma * rng.gauss(0.0, 1.0))
+        if t >= duration:
+            break
+        times.append(t)
+    return times
+
+
 def with_refractory(times: Sequence[float], *, refractory: float) -> list[float]:
     """Enforce a minimum inter-spike interval by dropping each spike that falls within
     refractory of the previously kept spike. Inputs are sorted first."""

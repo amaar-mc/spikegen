@@ -6,6 +6,23 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-06-24
+
+### Added
+- `lognormal_renewal(*, mean, cv, duration, seed)`: lognormal renewal process. Inter-spike
+  intervals are i.i.d. lognormal, the common empirical fit for cortical ISI distributions and
+  a natural companion to `gamma_renewal` and `inverse_gaussian_renewal`. Parameterized
+  directly by the ISI mean and coefficient of variation (the neuroscience-friendly form): the
+  underlying normal `N(mu, sigma**2)` is recovered from `sigma**2 = ln(1 + cv**2)` and
+  `mu = ln(mean) - sigma**2 / 2`, and each interval is `exp(mu + sigma * Z)` with `Z ~ N(0, 1)`
+  via `random.gauss`. This gives `E[ISI] = mean` and `CV[ISI] = cv` exactly in expectation; the
+  lognormal CV depends only on sigma, `CV = sqrt(exp(sigma**2) - 1)`, so small `cv` gives nearly
+  regular spiking and large `cv` gives bursty, irregular spiking. Implemented in pure Python
+  over the standard library `random` (zero runtime dependencies); seeded and reproducible.
+  Tested for reproducibility, ISI mean and CV convergence with tolerances derived from the
+  standard error, the empirical CV tracking the target across regular and irregular regimes,
+  ordering and range invariants, and validation.
+
 ## [0.5.0] - 2026-06-23
 
 ### Added

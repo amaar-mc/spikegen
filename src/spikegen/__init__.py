@@ -10,6 +10,7 @@ from .processes import (
     inhomogeneous_poisson,
     inverse_gaussian_renewal,
     jitter,
+    lognormal_renewal,
     regular,
     with_refractory,
 )
@@ -22,11 +23,12 @@ __all__ = [
     "inhomogeneous_poisson",
     "inverse_gaussian_renewal",
     "jitter",
+    "lognormal_renewal",
     "population",
     "regular",
     "with_refractory",
 ]
-__version__ = "0.5.0"
+__version__ = "0.6.0"
 
 # ``homogeneous_poisson_numpy`` is available only when NumPy is installed
 # (``pip install spikegen[fast]``). Import it lazily so the package still

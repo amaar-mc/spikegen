@@ -42,6 +42,19 @@ corrects the two-root transformation so the sample has the exact inverse-Gaussia
 accumulate until the time leaves `[0, duration)`. Larger `lam` concentrates the intervals at
 `mu` (regular spiking); smaller `lam` spreads them out (irregular spiking).
 
+## Lognormal renewal
+
+`lognormal_renewal` draws inter-spike intervals from a lognormal distribution, the common
+empirical fit for cortical ISI distributions, which makes it a natural companion to the gamma
+and inverse-Gaussian renewal processes. It is parameterized directly by the ISI mean and
+coefficient of variation `cv` (the neuroscience-friendly form) rather than by the underlying
+normal's parameters. Given a target mean and cv, the underlying normal `N(mu, sigma**2)` is
+recovered from `sigma**2 = ln(1 + cv**2)` and `mu = ln(mean) - sigma**2 / 2`, and each interval
+is `exp(mu + sigma * Z)` with `Z` standard normal (via `random.gauss`). This yields
+`E[ISI] = mean` and `CV[ISI] = cv` exactly in expectation. The lognormal CV depends only on
+sigma, `CV = sqrt(exp(sigma**2) - 1)`, so small `cv` gives nearly regular spiking and large
+`cv` gives bursty, irregular spiking. Spikes accumulate until the time leaves `[0, duration)`.
+
 ## Refractory filter
 
 `with_refractory` sorts the input and keeps a spike only when it is at least `refractory`
