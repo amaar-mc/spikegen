@@ -6,6 +6,24 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-06-23
+
+### Added
+- `inverse_gaussian_renewal(*, mu, lam, duration, seed)`: inverse-Gaussian (Wald) renewal
+  process. Inter-spike intervals are i.i.d. inverse-Gaussian `IG(mu, lam)` with mean `mu` and
+  variance `mu**3 / lam`, so the squared coefficient of variation is `CV**2 = mu / lam`. Large
+  `lam` concentrates the intervals at `mu` (regular spiking), small `lam` gives irregular
+  spiking. This is the first-passage-time law of a drift-diffusion (perfect
+  integrate-and-fire) neuron, a principled companion to `gamma_renewal`. Intervals are sampled
+  with the Michael-Schucany-Haas algorithm (Michael, Schucany, Haas, "Generating Random
+  Variates Using Transformations with Multiple Roots", The American Statistician 30(2):88-90,
+  1976): draw `y = N(0, 1)**2`, form the smaller root `x`, and return `x` with probability
+  `mu / (mu + x)`, else `mu**2 / x`. Implemented in pure Python over the standard library
+  `random` (zero runtime dependencies); seeded and reproducible. Tested for reproducibility,
+  ISI moment convergence (sample mean to `mu`, variance to `mu**3 / lam`) with tolerances
+  derived from the standard error, the empirical `CV**2 = mu / lam` relationship across
+  regular and irregular regimes, ordering and range invariants, and validation.
+
 ## [0.4.0] - 2026-06-20
 
 ### Added

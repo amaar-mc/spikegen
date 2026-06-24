@@ -90,6 +90,41 @@ def gamma_renewal(*, rate: float, shape: float, duration: float, seed: int) -> l
     return times
 
 
+def inverse_gaussian_renewal(*, mu: float, lam: float, duration: float, seed: int) -> list[float]:
+    """Inverse-Gaussian (Wald) renewal process: inter-spike intervals are i.i.d.
+    inverse-Gaussian IG(mu, lam) with mean mu and shape lam, so the interval mean is mu and
+    its variance is mu**3 / lam. This is the first-passage-time law of a drift-diffusion
+    (perfect integrate-and-fire) neuron, making it a principled companion to gamma_renewal.
+    As lam -> infinity the intervals concentrate at mu (regular spiking, low CV); the squared
+    coefficient of variation is CV**2 = mu / lam. Seeded for reproducibility.
+
+    Intervals are sampled with the Michael-Schucany-Haas algorithm (Michael, Schucany, Haas,
+    "Generating Random Variates Using Transformations with Multiple Roots", The American
+    Statistician 30(2):88-90, 1976): draw y = N(0, 1)**2, form
+    x = mu + (mu**2 * y) / (2 * lam) - (mu / (2 * lam)) * sqrt(4 * mu * lam * y + mu**2 * y**2),
+    then return x with probability mu / (mu + x), else mu**2 / x."""
+    check_positive("mu", mu)
+    check_positive("lam", lam)
+    check_duration(duration)
+    check_seed(seed)
+    rng = random.Random(seed)
+    times: list[float] = []
+    t = 0.0
+    while True:
+        n = rng.gauss(0.0, 1.0)
+        y = n * n
+        x = mu + (mu * mu * y) / (2.0 * lam) - (mu / (2.0 * lam)) * math.sqrt(
+            4.0 * mu * lam * y + mu * mu * y * y
+        )
+        # Selection step: pick the smaller root x with probability mu / (mu + x).
+        interval = x if rng.random() <= mu / (mu + x) else mu * mu / x
+        t += interval
+        if t >= duration:
+            break
+        times.append(t)
+    return times
+
+
 def with_refractory(times: Sequence[float], *, refractory: float) -> list[float]:
     """Enforce a minimum inter-spike interval by dropping each spike that falls within
     refractory of the previously kept spike. Inputs are sorted first."""

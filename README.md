@@ -8,7 +8,7 @@
 [![CI](https://github.com/amaar-mc/spikegen/actions/workflows/ci.yml/badge.svg)](https://github.com/amaar-mc/spikegen/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
-Generate spike trains in pure Python with zero dependencies. Poisson, gamma renewal, regular, Bernoulli, and inhomogeneous processes, returned as plain sorted lists of spike times, with explicit seeds for reproducibility.
+Generate spike trains in pure Python with zero dependencies. Poisson, gamma and inverse-Gaussian renewal, regular, Bernoulli, and inhomogeneous processes, returned as plain sorted lists of spike times, with explicit seeds for reproducibility.
 
 ## Install
 
@@ -24,6 +24,11 @@ from spikegen import homogeneous_poisson, regular, gamma_renewal, with_refractor
 homogeneous_poisson(rate=50.0, duration=2.0, seed=0)   # Poisson spikes in [0, 2)
 regular(rate=10.0, duration=1.0)                        # [0.0, 0.1, 0.2, ...]
 gamma_renewal(rate=20.0, shape=2.0, duration=1.0, seed=0)  # more regular than Poisson
+
+from spikegen import inverse_gaussian_renewal
+
+# Inverse-Gaussian (Wald) renewal: ISIs ~ IG(mu, lam); the LIF first-passage law.
+inverse_gaussian_renewal(mu=0.05, lam=0.2, duration=1.0, seed=0)
 
 spikes = homogeneous_poisson(rate=80.0, duration=1.0, seed=0)
 with_refractory(spikes, refractory=0.002)              # enforce a 2 ms refractory period
@@ -89,6 +94,12 @@ distance between them.
 - `inhomogeneous_poisson(rate_fn, max_rate, duration, seed)`: time-varying rate by thinning.
 - `gamma_renewal(rate, shape, duration, seed)`: gamma inter-spike intervals; shape 1 is
   Poisson, larger shape is more regular.
+- `inverse_gaussian_renewal(mu, lam, duration, seed)`: inverse-Gaussian (Wald) inter-spike
+  intervals `IG(mu, lam)` with mean `mu` and variance `mu**3 / lam`, so the squared
+  coefficient of variation is `mu / lam`. Large `lam` gives regular spiking, small `lam`
+  gives irregular spiking. This is the first-passage-time distribution of a drift-diffusion
+  (perfect integrate-and-fire) neuron, a principled companion to `gamma_renewal`. Intervals
+  are sampled with the Michael-Schucany-Haas algorithm (Michael, Schucany, Haas 1976).
 - `bernoulli(rate, duration, dt, seed)`: discrete-time Bernoulli process. Time is divided
   into bins of width dt; each bin fires at its start time with probability `rate * dt`.
   Raises `ValueError` when `rate * dt > 1`.

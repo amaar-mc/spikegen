@@ -15,7 +15,7 @@ Pure-Python spike-train generators. Zero runtime dependencies. Complements spike
 `src/spikegen/`:
 - `_validate.py` shared validation (rate, duration, seed, positivity)
 - `processes.py` the generators (regular, homogeneous and inhomogeneous Poisson, gamma
-  renewal) plus with_refractory
+  renewal, inverse-Gaussian renewal) plus with_refractory
 - `__init__.py` public surface
 
 See `docs/architecture.md` for the algorithms.

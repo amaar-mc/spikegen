@@ -27,6 +27,21 @@ it would make the thinning probability invalid.
 and a scale of `1 / (rate * shape)`, so the mean interval is `1 / rate`. Shape 1 reduces to
 the exponential intervals of a Poisson process; larger shapes give more regular spiking.
 
+## Inverse-Gaussian renewal
+
+`inverse_gaussian_renewal` draws inter-spike intervals from an inverse-Gaussian (Wald)
+distribution `IG(mu, lam)` with mean `mu` and variance `mu**3 / lam`, so the squared
+coefficient of variation is `mu / lam`. The interval is the first-passage time of a
+drift-diffusion (perfect integrate-and-fire) neuron, which makes this a principled companion
+to the gamma renewal process. Intervals are generated with the Michael-Schucany-Haas
+algorithm (Michael, Schucany, Haas 1976): draw a standard normal `n`, set `y = n**2`, compute
+the smaller root
+`x = mu + (mu**2 y) / (2 lam) - (mu / (2 lam)) sqrt(4 mu lam y + mu**2 y**2)`,
+then return `x` with probability `mu / (mu + x)` and `mu**2 / x` otherwise. The selection step
+corrects the two-root transformation so the sample has the exact inverse-Gaussian law. Spikes
+accumulate until the time leaves `[0, duration)`. Larger `lam` concentrates the intervals at
+`mu` (regular spiking); smaller `lam` spreads them out (irregular spiking).
+
 ## Refractory filter
 
 `with_refractory` sorts the input and keeps a spike only when it is at least `refractory`
